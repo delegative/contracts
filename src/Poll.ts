@@ -36,14 +36,15 @@ export class Poll extends SmartContract {
   //this function receives an array of Vote and checks if there are dublicates
   verifyPoll(votes: Vote[]) : Bool {
     let addresses = votes.map(a => a.address);
+    console.log(addresses)
     //sorting out all duplicates
     let duplicates = addresses => votes.filter((item, index) => votes.indexOf(item) !== index)
+    console.log(duplicates)
+    console.log(duplicates.length)
 
     return Bool(duplicates.length == 0)
   }
 
-  let votes1 = [{address: 'q'}, {address: 'w'}]
-  let votes2 = [{address: 'q'}, {address: 'q'}]
   // @method vote(variant : Field) {
   //   // this.votedCount.set(voted.add(Field(1)))
   // }
@@ -109,15 +110,23 @@ console.log('doing third tx \n\n')
 // let iw = await zkapp.strVote(['qq','qq'])
 // console.log('qqqq is', iw.toBoolean())
 
-let tx4 = await Mina.transaction(sender, () => {
-  let qqqq = zkapp.strVote(['qq','qq'])
-  // let zxc = zkapp.checkVotes([Field(5)])
-  console.log('assertion has value', qqqq.toBoolean())
-  return qqqq
-});
-await tx4.prove()
-console.log('proof tx is', tx4.toPretty())
-console.log('proof tx is', tx4.toJSON())
+let votes1 = [{address: 'q', power: 1, variant: 1}, {address: 'w', power: 2, variant: 2}]
+let votes2 = [{address: 'q', power: 1, variant: 1}, {address: 'q', power: 2, variant: 2}]
+let res1 = await zkapp.verifyPoll(votes1)
+console.log('res1 is', res1.toBoolean())
+let res2 = await zkapp.verifyPoll(votes2)
+console.log('res2 is', res2.toBoolean())
+
+// let tx4 = await Mina.transaction(sender, () => {
+//   let qqqq = zkapp.strVote(['qq','qq'])
+//   // let zxc = zkapp.checkVotes([Field(5)])
+//   console.log('assertion has value', qqqq.toBoolean())
+//   return qqqq
+// });
+// await tx4.prove()
+// console.log('proof tx is', tx4.toPretty())
+// console.log('proof tx is', tx4.toJSON())
+
 //
 // await tx4.prove();
 // await tx4.sign([senderKey]).send();
