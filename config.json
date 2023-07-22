@@ -1,4 +1,12 @@
 {
   "version": 1,
-  "deployAliases": {}
+  "deployAliases": {
+    "delegative": {
+      "url": "https://proxy.berkeley.minaexplorer.com/graphql",
+      "keyPath": "keys/delegative.json",
+      "feepayerKeyPath": "/home/shevtsov/.cache/zkapp-cli/keys/first.json",
+      "feepayerAlias": "first",
+      "fee": "0.1"
+    }
+  }
 }

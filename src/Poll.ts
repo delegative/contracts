@@ -1,38 +1,99 @@
-import { Field, SmartContract, state, State, method, UInt64 } from 'snarkyjs';
+import { Field, SmartContract, state, State, method, UInt64, Nullifier, MerkleMap, MerkleMapWitness, CircuitString, Circuit, Mina, PrivateKey, AccountUpdate } from 'snarkyjs';
 
-/**
- * Basic Example
- * See https://docs.minaprotocol.com/zkapps for more info.
- *
- * The Add contract initializes the state variable 'num' to be a Field(1) value by default when deployed.
- * When the 'update' method is called, the Add contract adds Field(2) to its 'num' contract state.
- *
- * This file is safe to delete and replace with your own contract.
- */
 export class Poll extends SmartContract {
-  @state(Field) num = State<Field>();
+  @state(Field) required = State<Field>()
+  @state(Field) fff = State<Field>()
 
-  @state(Field) votedCount = State<Field>();
+  @state(Field) nullifierRoot = State<Field>();
+  @state(Field) nullifierMessage = State<Field>();
 
-  @method init() {
-    super.init();
-    this.num.set(Field(1));
-    this.votedCount.set(Field(0));
+  // @method init(mycount: Field) {
+  //   super.init();
+  //   this.required.set(mycount)
+  //
+  // }
+
+  @method setF(qwe: Field) {
+    this.fff.set(qwe)
+  }
+
+  @method getF() : Field {
+    let zzz = this.fff.getAndAssertEquals();
+    return zzz
+  }
+
+  @method checkVotes() {
+    // let a = Circuit.array
+
+    let qwe = new MerkleMap()
+    qwe.set(Field(1), Field(2))
+
   }
 
 
   @method vote(variant : Field) {
 
-    let voted = this.votedCount.get()
-
-    this.votedCount.set(voted.add(Field(1)))
-
+    // this.votedCount.set(voted.add(Field(1)))
 
   }
 
-  @method update() {
-    const currentState = this.num.getAndAssertEquals();
-    const newState = currentState.add(2);
-    this.num.set(newState);
-  }
 }
+
+let Local = Mina.LocalBlockchain({ proofsEnabled: true });
+Mina.setActiveInstance(Local);
+
+const [ { publicKey: sender, privateKey: senderKey }, { publicKey: player2, privateKey: player2Key }, ] = Local.testAccounts;
+
+// let { privateKey: senderKey, publicKey: sender } = Local.testAccounts[0];
+
+// the zkapp account
+let zkappKey = PrivateKey.random();
+let zkappAddress = zkappKey.toPublicKey();
+let zkapp = new Poll(zkappAddress);
+
+console.log('the application will use address', zkappAddress)
+
+console.log('compiling');
+await Poll.compile();
+
+console.log('deploying');
+let tx = await Mina.transaction(sender, () => {
+  let senderUpdate = AccountUpdate.fundNewAccount(sender);
+  // senderUpdate.send({ to: zkappAddress, amount: initialBalance });
+  zkapp.deploy({ zkappKey });
+
+});
+await tx.prove();
+await tx.sign([senderKey]).send();
+// console.log(tx.toPretty())
+
+let c = zkapp.fff.get()
+console.log('the value is ', c)
+
+console.log('doing secdon tx \n\n')
+
+let tx2 = await Mina.transaction(sender, () => {
+  // let senderUpdate = AccountUpdate.fundNewAccount(sender);
+  // senderUpdate.send({ to: zkappAddress, amount: initialBalance });
+  zkapp.setF(Field(14885))
+
+});
+await tx2.prove();
+await tx2.sign([senderKey]).send();
+// console.log(tx2.toPretty())
+
+console.log('doing third tx \n\n')
+let tx3 = await Mina.transaction(sender, () => {
+  let zxc = zkapp.getF()
+  console.log('zxc has value', zxc)
+});
+await tx3.prove();
+await tx3.sign([senderKey]).send();
+console.log(tx3.toPretty())
+// console.log(zxc)
+
+
+let b = zkapp.fff.get()
+console.log('finally its', b)
+
+
