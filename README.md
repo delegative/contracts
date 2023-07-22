@@ -8,7 +8,11 @@ This template uses TypeScript.
 npm run build
 ```
 
-##
+## Run locally:
+
+`node build/src/Poll.js`
+
+## Deploy
 
 Deploy: `zk deploy delegative`
 
