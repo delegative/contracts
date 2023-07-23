@@ -1,53 +1,58 @@
 import { Field, SmartContract, state, State, method, UInt64, Nullifier, MerkleMap, MerkleMapWitness, CircuitString, Circuit, Mina, PrivateKey, AccountUpdate, Bool, Provable } from 'snarkyjs';
+import { Prover } from 'snarkyjs/dist/node/lib/proof_system';
 
 type Vote = { address: String, power: number, variant:number  }
+type Result = {success: boolean, direction: boolean}
+type Args = {timestamp: Field, votes: Vote[]}
 
+//TODO: change result value of verifyPoll function to -> (success: bool, direction: true/false/null (if success is
+//false)
+
+// to deploy we need to get timesamp from the poll creator:
+// timestamp <- await getTimestamp()
+let timestamp = Field(148) //dummy value
 
 export class Poll extends SmartContract {
-  @state(Field) fff = State<Field>()
-  @state(Field) endTimestamp = State<Field>()
+  @state(Field) endTimeStamp = State<Field>()
 
-
-  // @method init(mycount: Field) {
-  //   super.init();
-  //   this.required.set(mycount)
-  //
-  // }
-
-  //Just for testing
-  @method setF(qwe: Field) {
-    this.fff.set(qwe)
-  }
-
-  @method getF() : Field {
-    let zzz = this.fff.getAndAssertEquals();
-    return zzz
-  }
-
-  checkVotes(votes: Field[]) : Bool {
-    let x = votes[0] 
-
-    // let qwe = new MerkleMap()
-    // qwe.set(Field(1), Field(2))
-    let res = x.equals(this.fff.get())
-    return res
+  @method init() {
+    super.init();
+    this.endTimeStamp.set(timestamp)
   }
 
   //this function receives an array of Vote and checks if there are dublicates
-  verifyPoll(votes: Vote[]) : Bool {
+  verifyPoll(args: Args)  {
+    //checking timestamp
+    let timestamp = args.timestamp
+    //check that the provided timestamp is greater than the end of the Poll
+    timestamp.assertGreaterThanOrEqual(this.endTimeStamp.get(), "It's too early, wait for the end of the poll.")
+
+    //checking for duplicates in the list of addresses
+    let votes = args.votes
     let addresses = votes.map(a => a.address);
     console.log(addresses)
     //sorting out all duplicates
-    let duplicates = addresses => votes.filter((item, index) => votes.indexOf(item) !== index)
+    let duplicates = addresses.filter((item, index) => addresses.indexOf(item) !== index)
+    // let res = duplicates(addresses)
     console.log(duplicates)
     console.log(duplicates.length)
 
-    return Bool(duplicates.length == 0)
+    //counting the votes
+    //
+    // res: Result {success: false,
+    let res: Object = {}
+    
+    for(let i=0; i<votes.length; i++) {
+      let vote = votes[i]
+      let propertyName = vote.variant.toString()
+      if (res.hasOwnProperty(propertyName)) {
+        res[propertyName] += vote.power
+      } else {
+        res[propertyName] = vote.power
+      }
+    }
+    return res
   }
-
-  // @method vote(variant : Field) {
-  //   // this.votedCount.set(voted.add(Field(1)))
-  // }
 
 }
 
@@ -63,7 +68,6 @@ let zkapp = new Poll(zkappAddress);
 console.log('the application has address', zkappAddress.toJSON())
 console.log('compiling');
 await Poll.compile();
-
 console.log('deploying');
 let tx = await Mina.transaction(sender, () => {
   let senderUpdate = AccountUpdate.fundNewAccount(sender);
@@ -75,62 +79,22 @@ let pending = await tx.sign([senderKey]).send();
 let trans = await pending.wait()
 console.log('deployemtn tx hash is', pending.hash())
 
-let c = zkapp.fff.get()
-console.log('the value is ', c.toBigInt())
-console.log('doing secdon tx \n\n')
+let c = zkapp.endTimeStamp.get()
+console.log('the timestamp is ', c.toBigInt())
 
 
-//HERE I UPDATE STATE
-// let tx2 = await Mina.transaction(sender, () => {
-//   // let senderUpdate = AccountUpdate.fundNewAccount(sender);
-//   // senderUpdate.send({ to: zkappAddress, amount: initialBalance });
-//   zkapp.setF(Field(5))
-// });
-// await tx2.prove();
-// await tx2.sign([senderKey]).send();
-// // console.log(tx2.toPretty())
-//
-console.log('doing third tx \n\n')
-
-// let tx3 = await Mina.transaction(sender, () => {
-//   let zxc = zkapp.getF()
-//   console.log('f state variable has value', zxc.toBigInt())
-// });
-// await tx3.prove();
-// await tx3.sign([senderKey]).send();
-// console.log(tx3.toPretty())
-// console.log(zxc)
-
-// let b = zkapp.fff.get()
-// console.log('finally its', b.toBigInt())
-// let qqqq = await zkapp.strVote(['qq','ww'])
-// console.log('qqqq is', qqqq.toBoolean())
-//
-// // let iw = await zkapp.checkVotes([Field(4)])
-// let iw = await zkapp.strVote(['qq','qq'])
-// console.log('qqqq is', iw.toBoolean())
-
-let votes1 = [{address: 'q', power: 1, variant: 1}, {address: 'w', power: 2, variant: 2}]
-let votes2 = [{address: 'q', power: 1, variant: 1}, {address: 'q', power: 2, variant: 2}]
-let res1 = await zkapp.verifyPoll(votes1)
-console.log('res1 is', res1.toBoolean())
-let res2 = await zkapp.verifyPoll(votes2)
-console.log('res2 is', res2.toBoolean())
-
-// let tx4 = await Mina.transaction(sender, () => {
-//   let qqqq = zkapp.strVote(['qq','qq'])
-//   // let zxc = zkapp.checkVotes([Field(5)])
-//   console.log('assertion has value', qqqq.toBoolean())
-//   return qqqq
-// });
-// await tx4.prove()
-// console.log('proof tx is', tx4.toPretty())
-// console.log('proof tx is', tx4.toJSON())
-
-//
-// await tx4.prove();
-// await tx4.sign([senderKey]).send();
-// console.log(tx4.toJSON())
-// console.log(zxc)
-
+let votes1 : Args = {timestamp: Field(1), votes: [{address: 'q', power: 1, variant: 1}, {address: 'w', power: 2, variant: 2}]}
+let votes2 : Args = {timestamp: Field(20000), votes: [{address: 'q', power: 1, variant: 1}, {address: 'q', power: 2, variant: 2}, {address: 'q', power: 1, variant: 1}]}
+try {
+  let res1 = await zkapp.verifyPoll(votes1)
+  console.log('res1 is', res1)
+} catch (e) {
+  console.log(e)
+}
+try {
+  let res2 = await zkapp.verifyPoll(votes2)
+  console.log('res2 is', res2)
+} catch(e) {
+  let a = await Mina.getNetworkState()
+}
 
