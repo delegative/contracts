@@ -10,14 +10,13 @@ fullfilling the poll.
 npm run build
 ```
 
-## Run locally:
-
-`node build/src/Poll.js`
-
-
 ## Run in Berkeley
 
 Deploy: `node build/src/main.ts`
+
+## Run locally:
+
+Deploy: `node build/src/local.ts`
 
 ## License
 
