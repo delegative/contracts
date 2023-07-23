@@ -1,6 +1,8 @@
 # Mina zkApp: Delegative
 
-This template uses TypeScript.
+Mina smart contract awaits for a list of votes, verifies that the timestamp is valid and there are no duplicates, thus
+fullfilling the poll.
+
 
 ## How to build
 
@@ -12,9 +14,10 @@ npm run build
 
 `node build/src/Poll.js`
 
-## Deploy
 
-Deploy: `zk deploy delegative`
+## Run in Berkeley
+
+Deploy: `node build/src/main.ts`
 
 ## License
 
