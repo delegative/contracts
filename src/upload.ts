@@ -19,7 +19,7 @@ export async function uploadJson(text) {
     }
   }
   */
-  console.log("Visit at: https://gateway.lighthouse.storage/ipfs/" + response.Hash);
+  console.log("Visit at: https://gateway.lighthouse.storage/ipfs/" + response.data.Hash);
   return response
 }
 

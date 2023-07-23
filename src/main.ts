@@ -1,6 +1,6 @@
 import { Args, Poll } from './Poll.js';
-import { CircuitString, Field, isReady, shutdown, Mina, PrivateKey } from 'snarkyjs';
-import { uploadJson } from "./upload";
+import { CircuitString, Field, isReady, shutdown, Mina, PrivateKey, fetchAccount } from 'snarkyjs';
+import { uploadJson } from "./upload.js";
 
 import fs from 'fs';
 import { loopUntilAccountExists, deploy } from './utils.js';
@@ -13,6 +13,7 @@ console.log('SnarkyJS loaded');
 // ----------------------------------------------------
 
 const Berkeley = Mina.Network( 'https://proxy.berkeley.minaexplorer.com/graphql');
+// const Berkeley = Mina.LocalBlockchain({ proofsEnabled: true });
 Mina.setActiveInstance(Berkeley);
 
 const transactionFee = 100_000_000;
@@ -66,6 +67,11 @@ await deploy(deployerPrivateKey, zkAppPrivateKey, zkapp, verificationKey, Field(
 //   isZkAppAccount: true,
 // });
 //
+let  acc  = await fetchAccount({publicKey: zkAppPublicKey})
+console.log('acc', acc)
+let isDeployed = acc.account?.verificationKey !== undefined;
+console.log('isDeployed', isDeployed)
+
 let votes : Args = {timestamp: Field(2), 
   votes: [
     {address: CircuitString.fromString('q'), power: Field(1), variant: CircuitString.fromString("for")},
@@ -74,11 +80,12 @@ let votes : Args = {timestamp: Field(2),
   ]
 }
 
-let votesValid : Args = {timestamp: Field(2), 
+let votesValid : Args = {timestamp: Field(2000), 
   votes: [
-    {address: CircuitString.fromString('q'), power: Field(1), variant: CircuitString.fromString("for")},
+    {address: CircuitString.fromString('q'), power: Field(15), variant: CircuitString.fromString("for")},
     {address: CircuitString.fromString('q'), power: Field(2), variant: CircuitString.fromString("against")},
-    {address: CircuitString.fromString('q'), power: Field(7), variant: CircuitString.fromString("for")}
+    {address: CircuitString.fromString('q'), power: Field(7), variant: CircuitString.fromString("for")},
+    {address: CircuitString.fromString('q'), power: Field(70), variant: CircuitString.fromString("for")}
   ]
 }
 
@@ -94,12 +101,11 @@ console.log('trying to prove the valid votes')
 try {
   let result = await zkapp.verifyPoll(votesValid)
   console.log('got the result', result)
+  let res = await uploadJson(JSON.stringify(result))
 
 } catch (e) {
   console.log(e)
 }
-
-
 
 console.log('Shutting down');
 
