@@ -4,7 +4,7 @@
     "delegative": {
       "url": "https://proxy.berkeley.minaexplorer.com/graphql",
       "keyPath": "keys/delegative.json",
-      "feepayerKeyPath": "first.json",
+      "feepayerKeyPath": "delegative.json",
       "feepayerAlias": "first",
       "fee": "0.1",
       "smartContract": "Poll"

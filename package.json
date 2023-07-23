@@ -46,7 +46,8 @@
   },
   "peerDependencies": {
     "snarkyjs": "0.12.*"
+  },
+  "dependencies": {
+    "@lighthouse-web3/sdk": "^0.2.5"
   }
 }
-
-
